@@ -3,7 +3,7 @@
 
 # N.B. Ho osservato che nei file XML salvati nel mio computer a volte scomparivano degli spazi (es. 'dellaRenault' in luogo di 'della Renault' nel resoconto numero 9 della legislatura numero 18 o 'diroutine' in luogo di 'di routine' nel resoconto 18 della stessa legislatura), mi pare sempre prima di una parola che era contenuta in un tag \\<emphasis\>\. Ho debuggato passo passo e la scomparsa dello spazio non si verificava prima del metodo .write(), il che significa che è dovuta al metodo stesso o ad altro che non so come risolvere. Come soluzione di comodo, ho aggiunto uno spazio in testa al testo di ogni tag \\<emphasis\>\, il che sembra funzionare.
 
-# In[1]:
+# In[25]:
 
 
 from urllib.request import urlopen
@@ -12,7 +12,7 @@ import re
 import copy
 
 
-# In[2]:
+# In[26]:
 
 
 regex_sigla = re.compile('\([^a-z]+?\) *\.?')
@@ -49,15 +49,8 @@ def gestione_intervento(Element_intervento, Element_padre):
     for Element in Element_intervento.iter('nominativo'):
         nodo_nominativo = Element
         break
-    descrizioni = []
     for Element_emphasis in Element_intervento.iter('emphasis'):
-        if re.match("\(.*\)",Element_emphasis.text): 
-            # per eliminare le descrizioni degli stenografi su cosa sta accadendo in aula, che sembrano essere sempre inseriti in un tag emphasis ed inclusi in parentesi tonde.
-            # ritengo bassa la probabilità di falsi positivi perché sarebbe strano mettere in italico anche le parentesi in altri casi.
-            descrizioni.append(Element_emphasis)
-        else: Element_emphasis.text =" "+ Element_emphasis.text
-    for descrizione in descrizioni:
-        descrizione.getparent().remove(descrizione)
+        Element_emphasis.text =" "+ Element_emphasis.text
     attributi = copy.deepcopy(Element_intervento.attrib)
     attributi['idNominativo'] = nodo_nominativo.attrib['id']
     attributi['cognomeNome'] = nodo_nominativo.attrib['cognomeNome']
@@ -87,7 +80,7 @@ def gestione_intervento(Element_intervento, Element_padre):
         else: attributi['tipo'] = 'extra_parlamentare'
         attributi['qualifica'] = nodo_qualifica.text.strip().strip(",").strip()
         if attributi['qualifica'] in (',','.',''):
-            print("Qualifica anomala per l'intervento con id {} della seduta numero {}.".format(Element_intervento.attrib['id'],seduta.attrib['numero']))
+            print("Qualifica anomala per l'intervento con id {} della seduta numero {}. Aggiusta a mano?".format(Element_intervento.attrib['id'],seduta.attrib['numero']))
         nodo_nominativo.tail = None
         nodo_nominativo.text = None
         nodo_qualifica.text = None
@@ -122,7 +115,7 @@ def gestione_intervento(Element_intervento, Element_padre):
     return
 
 
-# In[3]:
+# In[28]:
 
 
 num_legislatura = str(18)
@@ -170,3 +163,4 @@ for num_seduta in range(1, 30):
         seduta_albero.write('Resoconti/legislatura_{}/seduta_{}.xml'.format(num_legislatura,num_seduta), encoding ='utf-8')
     else:
         print("Seduta {} non salvata perché priva di interventi.".format(num_seduta))
+
